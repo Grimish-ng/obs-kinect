@@ -16,6 +16,7 @@
 ******************************************************************************/
 
 #include <obs-kinect/KinectPlugin.hpp>
+#include <cstdlib>
 #include <obs-kinect-core/KinectPluginImpl.hpp>
 #include <obs-kinect-core/KinectDevice.hpp>
 
@@ -49,6 +50,11 @@ bool KinectPlugin::Open(const std::string& path)
 		libPtr = os_dlopen(("./" + path).c_str());
 		if (!libPtr)
 			libPtr = os_dlopen(("/app/plugins/lib/obs-plugins/" + path).c_str());
+                if (!libPtr)
+                {
+                        std::string homePath = std::string(getenv("HOME")) + "/.config/obs-studio/plugins/obs-kinect/bin/64bit/" + path + ".so";
+                        libPtr = os_dlopen(homePath.c_str());
+                }
 	}
 #endif
 

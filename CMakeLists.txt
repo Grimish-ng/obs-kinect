@@ -41,7 +41,6 @@ target_compile_options(obs-kinectcore PRIVATE -Wall -Wextra)
 set_target_properties(obs-kinectcore PROPERTIES
     PREFIX ""
     SUFFIX ".so"
-    BUILD_RPATH "."
 )
 
 # ── obs-kinect ───────────────────────────────────────────────────────────────
@@ -70,7 +69,6 @@ target_compile_options(obs-kinect PRIVATE -Wall -Wextra)
 set_target_properties(obs-kinect PROPERTIES
     PREFIX ""
     SUFFIX ".so"
-    BUILD_RPATH "."
 )
 
 # ── obs-kinect-freenect ──────────────────────────────────────────────────────
@@ -101,7 +99,6 @@ target_compile_options(obs-kinect-freenect PRIVATE -Wall -Wextra)
 set_target_properties(obs-kinect-freenect PROPERTIES
     PREFIX ""
     SUFFIX ".so"
-    BUILD_RPATH "."
 )
 
 # ── Install ──────────────────────────────────────────────────────────────────
@@ -110,17 +107,34 @@ include(GNUInstallDirs)
 
 # Plugin dir: ~/.config/obs-studio/plugins/obs-kinect/
 set(OBS_PLUGIN_DESTINATION "$ENV{HOME}/.config/obs-studio/plugins/obs-kinect")
+set(OBS_PLUGIN_BIN "${OBS_PLUGIN_DESTINATION}/bin/64bit")
+
+# Set RPATH so plugins find obs-kinectcore.so in the same directory at runtime
+set_target_properties(obs-kinect PROPERTIES
+    INSTALL_RPATH "${OBS_PLUGIN_BIN}"
+    BUILD_WITH_INSTALL_RPATH TRUE
+)
+
+set_target_properties(obs-kinect-freenect PROPERTIES
+    INSTALL_RPATH "${OBS_PLUGIN_BIN}"
+    BUILD_WITH_INSTALL_RPATH TRUE
+)
 
 install(TARGETS obs-kinect obs-kinect-freenect
-    LIBRARY DESTINATION "${OBS_PLUGIN_DESTINATION}/bin/64bit"
+    LIBRARY DESTINATION "${OBS_PLUGIN_BIN}"
 )
 
 install(TARGETS obs-kinectcore
-    LIBRARY DESTINATION "${OBS_PLUGIN_DESTINATION}/bin/64bit"
+    LIBRARY DESTINATION "${OBS_PLUGIN_BIN}"
 )
 
-install(DIRECTORY data/
+install(DIRECTORY data/obs-plugins/obs-kinect/
     DESTINATION "${OBS_PLUGIN_DESTINATION}/data"
+    OPTIONAL
+)
+
+install(DIRECTORY data/obs-plugins/obs-kinect/locale/
+    DESTINATION "${OBS_PLUGIN_DESTINATION}/data/locale"
     OPTIONAL
 )
 
