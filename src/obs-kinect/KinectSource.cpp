@@ -24,6 +24,7 @@
 #include <cstring>
 #include <numeric>
 #include <optional>
+#include <stdexcept>
 
 KinectSource::KinectSource(std::shared_ptr<KinectDeviceRegistry> registry, const obs_source_t* source) :
 m_filterBlur(GS_RGBA),

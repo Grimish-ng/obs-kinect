@@ -20,6 +20,7 @@
 #ifndef OBS_KINECT_PLUGIN_REPLACEBACKGROUNDEFFECT
 #define OBS_KINECT_PLUGIN_REPLACEBACKGROUNDEFFECT
 
+#include <cstdint>
 #include <obs-kinect/Shaders/TextureLerpShader.hpp>
 #include <obs-kinect-core/Helper.hpp>
 #include <string>

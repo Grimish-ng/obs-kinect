@@ -18,6 +18,7 @@
 #include "FreenectDevice.hpp"
 #include <libfreenect/libfreenect_registration.h>
 #include <util/threading.h>
+#include <cstdint>
 #include <cstring>
 #include <mutex>
 #include <sstream>
@@ -57,7 +58,7 @@ void KinectFreenectDevice::ThreadFunc(std::condition_variable& cv, std::mutex& m
 
 		currentColorMode = colorMode;
 
-		freenect_frame_mode depthMode = freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_11BIT_PACKED);
+		freenect_frame_mode depthMode = freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_11BIT);
 
 		if (freenect_set_depth_mode(m_device, depthMode) < 0)
 			throw std::runtime_error("failed to set video mode");
@@ -184,7 +185,7 @@ void KinectFreenectDevice::ThreadFunc(std::condition_variable& cv, std::mutex& m
 				// Copy it to buffer memory
 				std::size_t memSize = frameData.width * frameData.height * 2;
 				frameData.memory.resize(memSize);
-				freenect_convert_packed_to_16bit(reinterpret_cast<std::uint8_t*>(frameMem), reinterpret_cast<std::uint16_t*>(frameData.memory.data()), 11, frameData.width*frameData.height);
+				std::memcpy(frameData.memory.data(), frameMem, memSize);
 
 				frameData.ptr.reset(reinterpret_cast<std::uint16_t*>(frameData.memory.data()));
 				frameData.pitch = static_cast<std::uint32_t>(frameData.width * 2);
@@ -199,7 +200,7 @@ void KinectFreenectDevice::ThreadFunc(std::condition_variable& cv, std::mutex& m
 				// Convert to R16
 				std::size_t memSize = frameData.width * frameData.height * 2;
 				frameData.memory.resize(memSize);
-				freenect_map_depth_to_rgb(m_device, reinterpret_cast<std::uint8_t*>(frameMem), reinterpret_cast<std::uint16_t*>(frameData.memory.data()));
+				std::memcpy(frameData.memory.data(), frameMem, memSize);
 
 				frameData.ptr.reset(reinterpret_cast<std::uint16_t*>(frameData.memory.data()));
 				frameData.pitch = static_cast<std::uint32_t>(frameData.width * 2);
