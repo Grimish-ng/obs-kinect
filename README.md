@@ -1,29 +1,29 @@
-# obs-kinect (Linux / libfreenect)
+# obs-kinect (CMake / Cross-platform)
 
-OBS Studio plugin to use a **Kinect v1 (Xbox 360)** as a camera source on Linux, with support for depth-based virtual green screen effects and infrared streaming.
+OBS Studio plugin to use a **Kinect v1 (Xbox 360)** as a camera source, with support for depth-based virtual green screen effects and infrared streaming.
 
 This is a fork of [SirLynix/obs-kinect](https://github.com/SirLynix/obs-kinect) with:
-- A native **CMake build system** for Linux (replaces xmake)
+- A native **CMake build system** replacing xmake (works on Linux, planned for Windows)
 - Compatibility fixes for **libfreenect 0.7.x**
 - **Infrared streaming** support with dynamic RGB/IR mode switching
 - Proper **depth-to-RGB registration** via `FREENECT_DEPTH_REGISTERED`
 - Tested on **Bazzite / Fedora 43** with Kinect v1 (model 1414)
 
-> **Note:** Only the Kinect v1 (Xbox 360) freenect backend is supported on Linux. The Windows SDK, Azure Kinect, and Kinect v2 backends are not built.
+> **Current status:** Linux fully working. Windows cmake support is planned — see [Roadmap](#roadmap).
 
 ---
 
 ## Supported Sources
 
-| Source | Status |
-|---|---|
-| Color (RGB) | ✅ Working |
-| Depth | ✅ Working (mm, registered to RGB) |
-| Infrared | ✅ Working (10-bit, scaled to 16-bit) |
-| Color-Mapped Depth | ✅ Working (aligned to RGB frame) |
-| Green Screen (depth-based) | ✅ Working |
-| Body/Skeletal tracking | ❌ Windows SDK only |
-| Dedicated background removal | ❌ Windows SDK only |
+| Source | Linux | Windows (planned) |
+|---|---|---|
+| Color (RGB) | ✅ Working | 🔲 Planned |
+| Depth | ✅ Working (mm, registered to RGB) | 🔲 Planned |
+| Infrared | ✅ Working (10-bit, scaled to 16-bit) | 🔲 Planned |
+| Color-Mapped Depth | ✅ Working (aligned to RGB frame) | 🔲 Planned |
+| Green Screen (depth-based) | ✅ Working | 🔲 Planned |
+| Body/Skeletal tracking | 🔲 Planned (OpenNI2/NiTE2) | 🔲 Planned (Kinect SDK) |
+| Dedicated background removal | ❌ Windows SDK only | 🔲 Planned (Kinect SDK) |
 
 > **Note:** RGB and Infrared share the same hardware pipeline — switching between them causes a brief resync (normal USB isochronous behaviour). Depth streams independently and is unaffected.
 
@@ -187,11 +187,37 @@ Selecting **Infrared** as the source type switches the Kinect's video pipeline f
 
 ---
 
+## Roadmap
+
+### Windows cmake support (v2.0)
+
+The original project used xmake on Windows. The goal is to make the cmake build system work on Windows too, giving a single unified build system across all platforms.
+
+What needs doing:
+
+- **Windows install paths** — OBS plugins go in `%APPDATA%\obs-studio\plugins\` on Windows; the CMakeLists.txt needs to detect the platform and set the correct default prefix
+- **Kinect SDK v1 backend** (`obs-kinect-sdk10`) — restore the Windows SDK v1 target in CMakeLists.txt with `find_package(KinectSDK10)` and MSVC-specific compile flags
+- **Kinect SDK v2 backend** (`obs-kinect-sdk20`) — same for the Xbox One Kinect
+- **MSVC flags** — re-add `/Zc:__cplusplus`, `/Zc:referenceBinding`, `/Zc:throwingNew`, `/wd4251` conditionally under `if(MSVC)`
+- **libfreenect on Windows** — the freenect backend should also work on Windows since libfreenect supports it, though users need to install the libfreenect Windows binary
+
+Contributions welcome — if you have a Windows machine with a Kinect and the Kinect SDK installed, this would be a great place to help.
+
+### Body/skeletal tracking on Linux (v2.1)
+
+The obs-kinect core already has infrastructure for `Source_Body` and `BodyIndexFrameData`. On Linux, skeletal tracking requires one of:
+
+- **OpenNI2 + NiTE2** — NiTE2 is a closed-source middleware that provides 20-joint skeleton tracking on Kinect v1. OpenNI2-FreenectDriver bridges libfreenect to the OpenNI2 API. This is the most capable option but NiTE2 is an old proprietary binary blob.
+- **Skeltrack** — open source skeleton tracker built on libfreenect by Igalia, purely depth-based, no proprietary dependencies, but less accurate and somewhat unmaintained.
+- **MediaPipe / ML-based** — feed the Kinect RGB stream through a modern pose estimation model. Doesn't use depth for tracking but works with any camera and is actively maintained.
+
+---
+
 ## What was changed from upstream
 
 | File | Change |
 |---|---|
-| `CMakeLists.txt` | New — native Linux cmake build, replaces xmake. Distro-agnostic, supports user and system-wide install |
+| `CMakeLists.txt` | New — native cmake build replacing xmake. Distro-agnostic, supports user and system-wide install |
 | `src/obs-kinect-freenect/FreenectDevice.cpp` | Full rewrite: infrared support, dynamic RGB/IR switching, `FREENECT_DEPTH_REGISTERED` for proper depth alignment, libfreenect 0.7.x API fixes |
 | `src/obs-kinect/KinectPlugin.cpp` | Add `~/.config/obs-studio/plugins/obs-kinect/bin/64bit/` to backend search paths |
 | `src/obs-kinect/KinectSource.cpp` | Add missing `#include <stdexcept>` |
@@ -208,6 +234,17 @@ Selecting **Infrared** as the source type switches the Kinect's video pipeline f
 | `v1.1-linux` | Distro-agnostic libobs detection (Fedora/Arch/Ubuntu) |
 | `v1.2-linux` | Proper cmake `--prefix` support, correct locale/effect install paths |
 | `v1.3-linux` | Infrared support, registered depth, dynamic RGB/IR mode switching |
+| `v1.4-linux` | Updated README, roadmap for Windows and body tracking |
+
+---
+
+## Contributing
+
+Pull requests welcome, especially for:
+- Windows cmake build support
+- Testing on Kinect models 1473 and 1517
+- OpenNI2/NiTE2 body tracking integration
+- libfreenect2 backend for Kinect v2
 
 ---
 
